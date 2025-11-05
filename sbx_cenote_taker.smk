@@ -76,7 +76,8 @@ rule cenote_taker:
         fi
 
         cd {params.out_dir}
-        cenotetaker3 --contigs {input.contigs} -r {params.sample} -p T >> {log} 2>&1
+        export CENOTE_DBS={params.db_fp}
+        cenotetaker3 --contigs {input.contigs} -r {params.sample} -p T --lin_minimum_hallmark_genes 2 >> {log} 2>&1
         """
 
 
