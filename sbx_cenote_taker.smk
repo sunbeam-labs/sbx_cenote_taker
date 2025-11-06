@@ -35,7 +35,6 @@ rule cenote_taker:
         summary=VIRUS_FP
         / "cenote_taker"
         / "{sample}"
-        / "{sample}"
         / "{sample}_CONTIG_SUMMARY.tsv",
     benchmark:
         BENCHMARK_FP / "cenote_taker_{sample}.tsv"
@@ -86,7 +85,6 @@ rule filter_cenote_contigs:
         contigs=VIRUS_FP / "cenote_taker" / "{sample}" / "final.contigs.fasta",
         summary=VIRUS_FP
         / "cenote_taker"
-        / "{sample}"
         / "{sample}"
         / "{sample}_CONTIG_SUMMARY.tsv",
     output:
