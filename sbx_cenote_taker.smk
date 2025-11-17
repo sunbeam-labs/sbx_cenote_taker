@@ -90,7 +90,7 @@ rule filter_cenote_contigs:
         / "{sample}"
         / "{sample}_CONTIG_SUMMARY.tsv",
     output:
-        VIRUS_FP / "cenote_taker" / "{sample}.fasta",
+        VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
     params:
         include_phages=Cfg["sbx_cenote_taker"]["include_phages"],
     script:
@@ -99,9 +99,9 @@ rule filter_cenote_contigs:
 
 rule build_virus_index:
     input:
-        cenote_output(),
+        VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
     output:
-        str(cenote_output()) + ".1.bt2",  # Don't use f-string, broken with python 3.12
+        str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta") + ".1.bt2",
     conda:
         "envs/sbx_cenote_taker.yml"
     container:
@@ -115,7 +115,7 @@ rule align_virus_reads:
     input:
         r1=QC_FP / "decontam" / "{sample}_1.fastq.gz",
         r2=QC_FP / "decontam" / "{sample}_2.fastq.gz",
-        index=str(cenote_output()) + ".1.bt2",  # Don't use f-string, broken with python 3.12
+        index=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta") + ".1.bt2",  # Don't use f-string, broken with python 3.12
     output:
         temp(VIRUS_FP / "alignments" / "{sample}.sam"),
     params:
@@ -185,7 +185,7 @@ rule virus_mpileup:
 
 rule filter_virus_coverage:
     input:
-        fa=cenote_output(),
+        fa=VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
         idx=VIRUS_FP / "alignments" / "{sample}.sorted.idxstats.tsv",
     output:
         VIRUS_FP / "final_{sample}_contigs.fasta",
