@@ -11,7 +11,7 @@ def get_extension_path() -> Path:
 
 
 def cenote_output() -> Path:
-    return VIRUS_FP / "cenote_taker" / "{sample}.fasta"
+    return VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"
 
 
 rule all_cenote_taker:
@@ -90,7 +90,7 @@ rule filter_cenote_contigs:
         / "{sample}"
         / "{sample}_CONTIG_SUMMARY.tsv",
     output:
-        VIRUS_FP / "cenote_taker" / "{sample}.fasta",
+        cenote_output(),
     params:
         include_phages=Cfg["sbx_cenote_taker"]["include_phages"],
     script:
