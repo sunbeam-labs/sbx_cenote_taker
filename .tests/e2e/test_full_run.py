@@ -1,4 +1,3 @@
-import os
 import pytest
 import shutil
 import subprocess as sp
@@ -22,9 +21,7 @@ def setup(tmpdir):
         [
             "sunbeam",
             "config",
-            "modify",
-            "-i",
-            "-s",
+            "--modify",
             f"{config_str}",
             f"{config_fp}",
         ]
