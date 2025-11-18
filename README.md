@@ -3,7 +3,7 @@
 # sbx_cenote_taker
 
 <!-- badges: start -->
-[![Tests](https://github.com/sunbeam-labs/sbx_cenote_taker/actions/workflows/tests.yml/badge.svg)](https://github.com/sunbeam-labs/sbx_cenote_taker/actions/workflows/tests.yml)
+[![Tests](https://github.com/sunbeam-labs/sbx_cenote_taker/actions/workflows/pr.yml/badge.svg)](https://github.com/sunbeam-labs/sbx_cenote_taker/actions/workflows/pr.yml)
 [![DockerHub](https://img.shields.io/docker/pulls/sunbeamlabs/sbx_cenote_taker)](https://hub.docker.com/repository/docker/sunbeamlabs/sbx_cenote_taker/)
 <!-- badges: end -->
 
