@@ -99,9 +99,9 @@ rule build_virus_index:
     output:
         str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta") + ".1.bt2",
     conda:
-        "envs/sbx_cenote_taker.yml"
+        "envs/utils.yml"
     container:
-        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-sbx-cenote-taker"
+        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     threads: Cfg["sbx_cenote_taker"]["bowtie2_build_threads"]
     shell:
         "bowtie2-build --threads {threads} -f {input} {input}"
@@ -118,9 +118,9 @@ rule align_virus_reads:
         index=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
     threads: 6
     conda:
-        "envs/sbx_cenote_taker.yml"
+        "envs/utils.yml"
     container:
-        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-sbx-cenote-taker"
+        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     shell:
         "bowtie2 -q --local -t --very-sensitive-local --threads {threads} --no-mixed --no-discordant -x {params.index} -1 {input.r1} -2 {input.r2} -S {output}"
 
@@ -135,9 +135,9 @@ rule process_virus_alignment:
     params:
         target=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
     conda:
-        "envs/sbx_cenote_taker.yml"
+        "envs/utils.yml"
     container:
-        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-sbx-cenote-taker"
+        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     shell:
         """
         samtools view -bT {params.target} {input} > {output.bam}
@@ -153,9 +153,9 @@ rule calculate_mapping_stats:
     output:
         VIRUS_FP / "alignments" / "{sample}.sorted.idxstats.tsv",
     conda:
-        "envs/sbx_cenote_taker.yml"
+        "envs/utils.yml"
     container:
-        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-sbx-cenote-taker"
+        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     shell:
         """
         samtools idxstats {input.bam} > {output}
@@ -170,9 +170,9 @@ rule virus_mpileup:
     output:
         VIRUS_FP / "alignments" / "{sample}.mpileup",
     conda:
-        "envs/sbx_cenote_taker.yml"
+        "envs/utils.yml"
     container:
-        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-sbx-cenote-taker"
+        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     shell:
         """
         samtools mpileup -f {input.contigs} {input.bam} > {output}
@@ -208,9 +208,9 @@ rule virus_blastx:
         mem_mb=24000,
         runtime=720,
     conda:
-        "envs/sbx_cenote_taker.yml"
+        "envs/utils.yml"
     container:
-        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-sbx-cenote-taker"
+        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     shell:
         """
         if [ -s {input} ]; then
@@ -240,9 +240,9 @@ rule calculate_coverage:
     params:
         ext_fp=str(get_extension_path()),
     conda:
-        "envs/sbx_cenote_taker.yml"
+        "envs/utils.yml"
     container:
-        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-sbx-cenote-taker"
+        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     shell:
         """
         samtools view -b {input.bam} | genomeCoverageBed -ibam stdin | grep -v 'genome'| perl {params.ext_fp}/scripts/coverage_counter.pl > {output}
@@ -280,9 +280,9 @@ rule virus_coverage_per_gene:
     params:
         contigs=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
     conda:
-        "envs/sbx_cenote_taker.yml"
+        "envs/utils.yml"
     container:
-        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-sbx-cenote-taker"
+        f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     script:
         "scripts/virus_coverage_per_gene.py"
 
