@@ -58,8 +58,8 @@ def run_sunbeam(setup):
         shutil.copytree(project_dir / "stats", "stats/")
         sys.exit(e)
 
-    shutil.copytree(output_fp / "logs", "logs/")
-    shutil.copytree(project_dir / "stats", "stats/")
+    # shutil.copytree(output_fp / "logs", "logs/")
+    # shutil.copytree(project_dir / "stats", "stats/")
 
     benchmarks_fp = project_dir / "stats"
 
