@@ -17,20 +17,7 @@ def setup(tmpdir):
 
     config_fp = project_dir / "sunbeam_config.yml"
 
-    config_str = f"sbx_virus_id: {{cenote_taker_db: {db_fp}}}"
-    sp.check_output(
-        [
-            "sunbeam",
-            "config",
-            "modify",
-            "-i",
-            "-s",
-            f"{config_str}",
-            f"{config_fp}",
-        ]
-    )
-
-    config_str = f"sbx_virus_id: {{cenote_taker_extra_dbs: False}}"
+    config_str = f"sbx_cenote_taker: {{cenote_taker_db: {db_fp}}}"
     sp.check_output(
         [
             "sunbeam",
@@ -62,9 +49,11 @@ def run_sunbeam(setup):
                 "conda",
                 "--profile",
                 project_dir,
-                "all_virus_id",
+                "all_cenote_taker",
                 "--directory",
                 tmpdir,
+                "--show-failed-logs",
+                "-n",
             ]
         )
     except sp.CalledProcessError as e:
@@ -80,46 +69,6 @@ def run_sunbeam(setup):
     yield output_fp, benchmarks_fp
 
 
-# def test_full_run(run_sunbeam):
-#    output_fp, benchmarks_fp = run_sunbeam
-
-#    all_align_fp = output_fp / "virus" / "summary" / "all_align_summary.txt"
-
-# Check output
-#    assert all_align_fp.exists()
-
-#    with open(all_align_fp) as f:
-#        header_line = f.readline()
-
-
-@pytest.fixture
-def dry_run_sunbeam(setup):
-    tmpdir, project_dir = setup
-
-    output_fp = project_dir / "sunbeam_output"
-
-    try:
-        # Run the test job
-        sp.check_output(
-            [
-                "sunbeam",
-                "run",
-                "--profile",
-                project_dir,
-                "all_virus_id",
-                "-n",
-            ]
-        )
-    except sp.CalledProcessError as e:
-        os.makedirs("logs", exist_ok=True)
-        os.makedirs("stats", exist_ok=True)
-        sys.exit(e)
-
-    os.makedirs("logs", exist_ok=True)
-    os.makedirs("stats", exist_ok=True)
-
-    yield output_fp
-
-
-def test_dry_run(dry_run_sunbeam):
+def test_run(run_sunbeam):
+    output_fp, benchmarks_fp = run_sunbeam
     assert True
