@@ -10,10 +10,6 @@ def get_extension_path() -> Path:
     return Path(__file__).parent.resolve()
 
 
-def cenote_output() -> Path:
-    return VIRUS_FP / "cenote_taker" / "{sample}.fasta"
-
-
 rule all_cenote_taker:
     input:
         expand(
@@ -119,7 +115,7 @@ rule align_virus_reads:
     output:
         temp(VIRUS_FP / "alignments" / "{sample}.sam"),
     params:
-        index=str(cenote_output()),
+        index=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
     threads: 6
     conda:
         "envs/sbx_cenote_taker.yml"
@@ -137,7 +133,7 @@ rule process_virus_alignment:
         sorted=temp(VIRUS_FP / "alignments" / "{sample}.sorted.bam"),
         bai=temp(VIRUS_FP / "alignments" / "{sample}.sorted.bam.bai"),
     params:
-        target=str(cenote_output()),
+        target=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
     conda:
         "envs/sbx_cenote_taker.yml"
     container:
@@ -170,7 +166,7 @@ rule virus_mpileup:
     input:
         bam=VIRUS_FP / "alignments" / "{sample}.sorted.bam",
         idx=VIRUS_FP / "alignments" / "{sample}.sorted.bam.bai",
-        contigs=cenote_output(),
+        contigs=VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
     output:
         VIRUS_FP / "alignments" / "{sample}.mpileup",
     conda:
@@ -282,7 +278,7 @@ rule virus_coverage_per_gene:
     output:
         tsv=VIRUS_FP / "alignments" / "{sample}.gene_coverage.tsv",
     params:
-        contigs=cenote_output(),
+        contigs=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
     conda:
         "envs/sbx_cenote_taker.yml"
     container:
