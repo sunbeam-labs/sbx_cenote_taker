@@ -7,7 +7,9 @@ VIRUS_FP = output_subdir(Cfg, "virus")
 
 
 def get_extension_path() -> Path:
-    return Path(__file__).parent.resolve()
+    return Path(__file__).parent.parent.resolve()
+def get_rules_path() -> Path:
+    return Path(__file__).resolve()
 
 
 rule all_cenote_taker:
@@ -26,13 +28,14 @@ rule all_cenote_taker:
 rule cenote_taker:
     input:
         contigs=ASSEMBLY_FP / "megahit" / "{sample}_asm" / "final.contigs.fa",
+        r1=QC_FP / "decontam" / "{sample}_1.fastq.gz",
+        r2=QC_FP / "decontam" / "{sample}_2.fastq.gz",
     output:
-        contigs=VIRUS_FP / "cenote_taker" / "{sample}" / "final.contigs.fasta",
+        contigs=VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna",
         summary=VIRUS_FP
         / "cenote_taker"
         / "{sample}"
-        / "{sample}"
-        / "{sample}_CONTIG_SUMMARY.tsv",
+        / "{sample}_virus_summary.tsv",
     benchmark:
         BENCHMARK_FP / "cenote_taker_{sample}.tsv"
     log:
@@ -41,6 +44,9 @@ rule cenote_taker:
         out_dir=str(VIRUS_FP / "cenote_taker"),
         sample="{sample}",
         db_fp=Cfg["sbx_cenote_taker"]["cenote_taker_db"],
+        molecule_type=Cfg["sbx_cenote_taker"]["molecule_type"],
+        lin_minimum_hallmark_genes=Cfg["sbx_cenote_taker"]["lin_minimum_hallmark_genes"],
+        seqtech=Cfg["sbx_cenote_taker"]["seqtech"],
     resources:
         mem_mb=24000,
         runtime=720,
@@ -73,31 +79,31 @@ rule cenote_taker:
 
         cd {params.out_dir}
         export CENOTE_DBS={params.db_fp}
-        cenotetaker3 --contigs {input.contigs} -r {params.sample} -p T --lin_minimum_hallmark_genes 2 >> {log} 2>&1
+        cenotetaker3 --contigs {input.contigs} --reads {input.r1} {input.r2} --seqtech {params.seqtech} --molecule_type {params.molecule_type} -r {params.sample} -p T --lin_minimum_hallmark_genes {params.lin_minimum_hallmark_genes} >> {log} 2>&1
         """
 
 
-rule filter_cenote_contigs:
-    input:
-        contigs=VIRUS_FP / "cenote_taker" / "{sample}" / "final.contigs.fasta",
-        summary=VIRUS_FP
-        / "cenote_taker"
-        / "{sample}"
-        / "{sample}"
-        / "{sample}_CONTIG_SUMMARY.tsv",
-    output:
-        VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
-    params:
-        include_phages=Cfg["sbx_cenote_taker"]["include_phages"],
-    script:
-        "scripts/filter_cenote_contigs.py"
+#rule filter_cenote_contigs:
+#    input:
+#        contigs=VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna",
+#        summary=VIRUS_FP
+#        / "cenote_taker"
+#        / "{sample}"
+#        / "{sample}_virus_summary.tsv",
+#    output:
+#        VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
+#    params:
+#        include_phages=Cfg["sbx_cenote_taker"]["include_phages"],
+#    script:
+#        "scripts/filter_cenote_contigs.py"
 
 
 rule build_virus_index:
     input:
-        VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
+        VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna",
     output:
-        str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta") + ".1.bt2",
+#        str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta") + ".1.bt2",
+        str(VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna") + ".1.bt2",
     conda:
         "envs/utils.yml"
     container:
@@ -111,11 +117,13 @@ rule align_virus_reads:
     input:
         r1=QC_FP / "decontam" / "{sample}_1.fastq.gz",
         r2=QC_FP / "decontam" / "{sample}_2.fastq.gz",
-        index=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta") + ".1.bt2",  # Don't use f-string, broken with python 3.12
+        #index=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta") + ".1.bt2",  # Don't use f-string, broken with python 3.12
+        index=str(VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna") + ".1.bt2",
     output:
         temp(VIRUS_FP / "alignments" / "{sample}.sam"),
     params:
-        index=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
+        #index=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
+        index=str(VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna"),
     threads: 6
     conda:
         "envs/utils.yml"
@@ -133,7 +141,8 @@ rule process_virus_alignment:
         sorted=temp(VIRUS_FP / "alignments" / "{sample}.sorted.bam"),
         bai=temp(VIRUS_FP / "alignments" / "{sample}.sorted.bam.bai"),
     params:
-        target=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
+        #target=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
+        target=str(VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna"),
     conda:
         "envs/utils.yml"
     container:
@@ -166,7 +175,8 @@ rule virus_mpileup:
     input:
         bam=VIRUS_FP / "alignments" / "{sample}.sorted.bam",
         idx=VIRUS_FP / "alignments" / "{sample}.sorted.bam.bai",
-        contigs=VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
+        #contigs=VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
+        contigs=VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna",
     output:
         VIRUS_FP / "alignments" / "{sample}.mpileup",
     conda:
@@ -179,22 +189,23 @@ rule virus_mpileup:
         """
 
 
-rule filter_virus_coverage:
-    input:
-        fa=VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
-        idx=VIRUS_FP / "alignments" / "{sample}.sorted.idxstats.tsv",
-    output:
-        VIRUS_FP / "final_{sample}_contigs.fasta",
-    log:
-        LOG_FP / "filter_virus_coverage_{sample}.log",
-    script:
-        "scripts/filter_virus_coverage.py"
+#rule filter_virus_coverage:
+#    input:
+#        #fa=VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta",
+#        fa=VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna",
+#        idx=VIRUS_FP / "alignments" / "{sample}.sorted.idxstats.tsv",
+#    output:
+#        VIRUS_FP / "final_{sample}_contigs.fasta",
+#    log:
+#        LOG_FP / "filter_virus_coverage_{sample}.log",
+#    script:
+#        "scripts/filter_virus_coverage.py"
 
 
 rule virus_blastx:
     """Run blastx on untranslated genes against a target db and write to blast tabular format."""
     input:
-        VIRUS_FP / "final_{sample}_contigs.fasta",
+        VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna",
     output:
         VIRUS_FP / "blastx" / "{sample}.btf",
     benchmark:
@@ -237,6 +248,8 @@ rule calculate_coverage:
         idx=VIRUS_FP / "alignments" / "{sample}.sorted.bam.bai",
     output:
         VIRUS_FP / "alignments" / "{sample}.genomecoverage.txt",
+    log:
+        LOG_FP / "calculate_coverage_{sample}.log",
     params:
         ext_fp=str(get_extension_path()),
     conda:
@@ -245,7 +258,7 @@ rule calculate_coverage:
         f"docker://sunbeamlabs/sbx_cenote_taker:{SBX_CENOTE_TAKER_VERSION}-utils"
     shell:
         """
-        samtools view -b {input.bam} | genomeCoverageBed -ibam stdin | grep -v 'genome'| perl {params.ext_fp}/scripts/coverage_counter.pl > {output}
+        samtools view -b {input.bam} | genomeCoverageBed -ibam stdin | grep -v 'genome'| perl {params.ext_fp}/sunbeam/extensions/sbx_cenote_taker/scripts/coverage_counter.pl > {output}
         """
 
 
@@ -267,7 +280,7 @@ rule combine_coverage_stats:
         "docker://r-base:latest"
     shell:
         """
-        Rscript {params.ext_fp}/scripts/combine_coverage_stats.R {input.cov} {input.stats} {output} 2>&1 | tee {log}
+        Rscript {params.ext_fp}/sunbeam/extensions/sbx_cenote_taker/scripts/combine_coverage_stats.R {input.cov} {input.stats} {output} 2>&1 | tee {log}
         """
 
 
@@ -278,7 +291,10 @@ rule virus_coverage_per_gene:
     output:
         tsv=VIRUS_FP / "alignments" / "{sample}.gene_coverage.tsv",
     params:
-        contigs=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
+        #contigs=str(VIRUS_FP / "cenote_taker" / "filtered" / "{sample}.fasta"),
+        contigs=str(VIRUS_FP / "cenote_taker" / "{sample}" / "{sample}_virus_sequences.fna"),
+    log:
+        LOG_FP / "virus_coverage_per_gene_{sample}.log",
     conda:
         "envs/utils.yml"
     container:

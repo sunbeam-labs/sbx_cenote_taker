@@ -3,4 +3,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - cenote-taker3
+  - cenote-taker3=3.4.4

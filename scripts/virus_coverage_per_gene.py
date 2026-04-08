@@ -4,8 +4,11 @@ from typing import TextIO
 # Step 1: Pileup Coverage Calculation
 def parse_coverage(pileup_f: TextIO) -> dict[str, dict[int, int]]:
     coverage_data = {}
-    for line in pileup_f:
-        contig, pos, _, coverage, _ = line.strip().split("\t", 4)
+    # TODO open the file, then read:
+    for line in pileup_f.readlines():
+        print(line.strip().split()[0])
+        print(line.strip().split()[1])
+        contig, pos, _, coverage, _, _ = line.strip().split()
         if contig not in coverage_data:
             coverage_data[contig] = {}
         coverage_data[contig][int(pos)] = int(coverage)
@@ -60,7 +63,6 @@ def write_output(final_report: list[str], output_f: TextIO) -> None:
             f"{entry['Contig_ID']}\t{entry['Gene_ID']}\t{entry['Gene_Coverage']}\t{entry['Annotation']}\n"
         )
 
-
-# coverage_data = parse_coverage(snakemake.input.mpileup)
-# final_report = collate_coverage_blast(coverage_data, snakemake.input.btf)
-# write_output(final_report, snakemake.output.tsv)
+coverage_data = parse_coverage(snakemake.input.mpileup)
+final_report = collate_coverage_blast(coverage_data, snakemake.input.btf)
+write_output(final_report, snakemake.output.tsv)

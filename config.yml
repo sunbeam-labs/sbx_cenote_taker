@@ -1,6 +1,9 @@
 sbx_cenote_taker:
-  blast_db: ''
+  blast_db: '/mnt/isilon/microbiome/analysis/biodata/blast/viral_prot_20251031/Refseq_viral_20251031.faa'
   blastx_threads: 4
   bowtie2_build_threads: 4
-  cenote_taker_db: ''
+  cenote_taker_db: '/mnt/isilon/microbiome/analysis/biodata/cenote-taker/ver4.1.1'
   include_phages: False
+  lin_minimum_hallmark_genes: 2 #Number of detected viral hallmark genes on a non-circular contig to be considered viral and recieve full annotation. '2' yields a false positive rate near 0.
+  molecule_type: 'DNA'
+  seqtech: 'Illumina' #Illumina, Nanopore, PacBio, Onso, Aviti
