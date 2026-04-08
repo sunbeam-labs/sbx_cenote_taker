@@ -43,10 +43,10 @@ with open(summary) as f_summary, open(contigs) as f_contigs, open(
     phages = ["phage", "siphoviridae", "conjugative transposon"]
     for line in dr:
         if (
-            all([x not in line["ORGANISM_NAME"].lower() for x in phages])
+            all([x not in line["organism"].lower() for x in phages])
             or include_phages
-        ) and int(line["NUM_HALLMARKS"]) > 0:
-            cd[line["ORIGINAL_NAME"]] = 1
+            ): #and int(line["virion_hallmark_count"]) > 0:
+            cd[line["organism"]] = 1
 
     for header_str, seq_str in parse_fasta(f_contigs):
         if header_str.split(" ")[0] in cd:
