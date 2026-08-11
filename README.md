@@ -46,3 +46,6 @@ sunbeam run --profile /path/to/project/ all_cenote_taker
   - bowtie2_build_threads: number of threads for running bowtie2-build (default: 4)
   - cenote_taker_db: path to cenote-taker3 db (default: "") (NOTE: this should be a directory)
   - include_phages: Whether to include phages in the output (default: False)
+  - lin_minimum_hallmark_genes: Number of detected viral hallmark genes on a non-circular contig to be considered viral and recieve full annotation. '2' yields a false positive rate near 0.
+  - molecule_type: 'DNA'
+  - seqtech: 'Illumina' #Illumina, Nanopore, PacBio, Onso, Aviti
