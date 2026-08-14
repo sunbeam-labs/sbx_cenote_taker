@@ -224,7 +224,7 @@ rule ct3_vOTU_table:
         taxtab=VIRUS_FP / "cenote_taker" / "cenote_vOTU_taxonomy.tsv",
     threads: 1
     log:
-        LOG_FP / "vOTU_table.log",
+        LOG_FP / "ct3_vOTU_table.log",
     conda:
         "envs/cenote_taker_env.yml"
     container:
@@ -234,8 +234,9 @@ rule ct3_vOTU_table:
         # grab mapped reads and reference length for vOTU table
         paste {input.stats} | awk '{{printf "%s\t%s", $1, $2; for(i=3;i<=NF;i+=4) printf "\t%s", $i; print ""}}' > {output.otutab} 2>> {log}
         # grab the vOTU representative sequence taxonomic assignments by contig ID and put them in their own file
-        head -n1 {input.summary} > {output.taxtab}
-        grep -F "$(awk '{{print $1 "\\t"}}' {output.otutab})" {input.summary} 1>> {output.taxtab} 2>> {log}
+        #head -n1 {input.summary} > {output.taxtab}
+        #grep -F "$(awk '{{print $1 "\\t"}}' {output.otutab})" {input.summary} 1>> {output.taxtab} 2>> {log}
+        awk 'BEGIN {{FS=OFS="\\t"}} NR==FNR {{if (NR==1) {{h2=$0; next}}; right[$1]=$0; next}} FNR==1 {{print $0, h2; next}} {{if ($1 in right) {{print $0, right[$1]}} else {{print $0, ""}}}}' {input.summary} {output.otutab} > {output.taxtab} 2>> {log}
         """
 
 # TODO: unclassified BLAST search against viral genome DB
